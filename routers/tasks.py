@@ -1,5 +1,7 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, status, Response
 from data import tasks_db
+from database import TaskCreate, TaskResponse, TaskUpdate
+from datetime import datetime
 
 router = APIRouter(
     prefix="/tasks",
@@ -54,9 +56,85 @@ async def get_tasks_by_status(status: str) -> dict:
         "tasks": filtered_tasks
     }
 
-@router.get("/{task_id}")
-async def get_task_by_id(task_id: int) -> dict:
+@router.get("/{task_id}", response_model=TaskResponse)
+async def get_task_by_id(task_id: int) -> TaskResponse:
     for task in tasks_db:
         if task['id'] == task_id:
             return task
     raise HTTPException(status_code=404, detail=f"Задача с ID={task_id} не найдена")
+
+@router.post("/", response_model=TaskResponse,
+status_code=status.HTTP_201_CREATED)
+async def create_task(task: TaskCreate) -> TaskResponse:
+    if task.is_important and task.is_urgent:
+        quadrant = "Q1"
+    elif task.is_important and not task.is_urgent:
+        quadrant = "Q2"
+    elif not task.is_important and task.is_urgent:
+        quadrant = "Q3"
+    else:
+        quadrant = "Q4"
+    new_id = max([t["id"] for t in tasks_db], default=0) + 1 # Генерируем новый ID
+
+    new_task = {
+        "id": new_id,
+        "title": task.title,
+        "description": task.description,
+        "is_important": task.is_important,
+        "is_urgent": task.is_urgent,
+        "quadrant": quadrant,
+        "completed": False,
+        "created_at": datetime.now()
+    }
+    tasks_db.append(new_task)
+ 
+    return new_task
+
+@router.put("/{task_id}", response_model=TaskResponse)
+async def update_task(task_id: int, task_update: TaskUpdate) -> TaskResponse:
+    task = next((
+        task for task in tasks_db
+        if task["id"] == task_id),
+        None
+    )
+    if not task:
+        raise HTTPException(status_code=404, detail="Задача не найдена")
+    update_data = task_update.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        task[field] = value
+    if "is_important" in update_data or "is_urgent" in update_data:
+        if task["is_important"] and task["is_urgent"]:
+            task["quadrant"] = "Q1"
+        elif task["is_important"] and not task["is_urgent"]:
+            task["quadrant"] = "Q2"
+        elif not task["is_important"] and task["is_urgent"]:
+            task["quadrant"] = "Q3"
+        else:
+            task["quadrant"] = "Q4"
+    return task
+
+@router.patch("/{task_id}/complete", response_model=TaskResponse)
+async def complete_task(task_id: int) -> TaskResponse:
+    task = next((
+        task for task in tasks_db
+        if task["id"] == task_id),
+        None
+    )
+    if not task:
+        raise HTTPException(status_code=404, detail="Задача не найдена")
+    task["completed"] = True
+    task["completed_at"] = datetime.now()
+    return task
+
+@router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_task(task_id: int):
+    task = next((
+        task for task in tasks_db
+        if task["id"] == task_id),
+        None
+    )
+    if not task:
+        raise HTTPException(status_code=404, detail="Задача не найдена")
+    tasks_db.remove(task)
+
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
