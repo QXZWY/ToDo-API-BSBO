@@ -1,1 +1,77 @@
-# Pydantic модели
+from pydantic import BaseModel, Field
+from typing import Optional
+from datetime import datetime
+
+class TaskBase(BaseModel):
+    title: str = Field(
+        ..., 
+        min_length=3,
+        max_length=100,
+        description="Название задачи")
+    description: Optional[str] = Field(
+        None,
+        max_length=500,
+        description="Описание задачи")
+    is_important: bool = Field(
+        ...,
+        description="Важность задачи")
+    deadline_at: Optional[datetime] = Field(
+        None,
+        description="Дедлайн задачи")
+
+class TaskCreate(TaskBase):
+    pass
+
+class TaskUpdate(BaseModel):
+    title: Optional[str] = Field(
+        None,
+        min_length=3,
+        max_length=100,
+        description="Новое название задачи")
+    description: Optional[str] = Field(
+        None,
+        max_length=500,
+        description="Новое описание")
+    is_important: Optional[bool] = Field(
+        None,
+        description="Новая важность")
+    deadline_at: Optional[datetime] = Field(
+        None,
+        description="Новый дедлайн")
+    completed: Optional[bool] = Field(
+        None,
+        description="Статус выполнения")
+
+class TaskResponse(TaskBase):
+    id: int = Field(
+        ...,
+        description="Уникальный идентификатор задачи",
+        examples=[1])
+    quadrant: str = Field(
+        ...,
+        description="Квадрант матрицы Эйзенхауэра (Q1, Q2, Q3, Q4)",
+        examples=["Q1"])
+    completed: bool = Field(
+        default=False,
+        description="Статус выполнения задачи")
+    created_at: datetime = Field(
+        ...,
+        description="Дата и время создания задачи")
+    completed_at: Optional[datetime] = Field(
+        None,
+        description="Дата и время завершения задачи")
+    is_urgent: bool = Field(
+        ...,
+        description="Срочность задачи (рассчитывается автоматически)")
+    days_until_deadline: Optional[int] = Field(
+        None,
+        description="Дней до дедлайна")
+    
+    class Config:
+        from_attributes = True
+
+class TaskDeadlineStats(BaseModel):
+    title: str = Field(..., description="Название задачи")
+    description: Optional[str] = Field(None, description="Описание задачи")
+    created_at: datetime = Field(..., description="Дата создания задачи")
+    days_until_deadline: int = Field(..., description="Дней до дедлайна")

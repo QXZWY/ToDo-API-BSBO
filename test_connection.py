@@ -11,9 +11,9 @@ async def test_connection():
             print(" Подключение успешно!")
             print(f" Результат тестового запроса: {result.scalar()}")
             print("\n Создание таблиц...")
-            await init_db()
-            print("\n ВСЕ ПРОВЕРКИ ПРОЙДЕНЫ!")
-            print(" База данных готова к работе.")
+        await init_db()
+        print("\n ВСЕ ПРОВЕРКИ ПРОЙДЕНЫ!")
+        print(" База данных готова к работе.")
     except Exception as e:
         print(f"\n ОШИБКА ПОДКЛЮЧЕНИЯ:")
         print(f" {e}")

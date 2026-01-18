@@ -2,6 +2,10 @@ from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text
 from sqlalchemy.sql import func
 from database import Base
 
+from pydantic import BaseModel, Field
+from typing import Optional
+from datetime import datetime, date
+
 class Task(Base):
     __tablename__ = "tasks"
     id = Column(
@@ -26,10 +30,9 @@ class Task(Base):
         default=False # По умолчанию False
     )
 
-    is_urgent = Column(
-        Boolean,
-        nullable=False,
-        default=False
+    deadline_at = Column(
+        DateTime(timezone=True),
+        nullable=True  # Может быть NULL, если дедлайн не установлен
     )
 
     quadrant = Column(
@@ -62,9 +65,32 @@ class Task(Base):
             "title": self.title,
             "description": self.description,
             "is_important": self.is_important,
-            "is_urgent": self.is_urgent,
+            "deadline_at": self.deadline_at,
             "quadrant": self.quadrant,
             "completed": self.completed,
             "created_at": self.created_at,
             "completed_at": self.completed_at
         }
+    
+    @property
+    def is_urgent(self) -> bool:
+        """Calculate urgency based on deadline"""
+        if not self.deadline_at:
+            return False
+        
+        today = datetime.now().date()
+        deadline_date = self.deadline_at.date()
+        days_until_deadline = (deadline_date - today).days
+        
+        return days_until_deadline <= 3
+    
+    @property
+    def days_until_deadline(self) -> int:
+        """Calculate days until deadline"""
+        if not self.deadline_at:
+            return None
+        
+        today = datetime.now().date()
+        deadline_date = self.deadline_at.date()
+        return (deadline_date - today).days
+    
