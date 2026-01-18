@@ -10,7 +10,7 @@ app = FastAPI(
 )
 
 # Подключение роутеров
-app.include_router(tasks.router)
+app.include_router(Tasks.router)
 app.include_router(stats.router)
 
 @app.get("/")
