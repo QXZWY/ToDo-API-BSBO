@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Матрица Эйзенхауэра</title>
+    <link rel="stylesheet" href="styles/colors.css">
+    <link rel="stylesheet" href="styles/styles.css">
+</head>
+<body>
+    <div id="auth-view" class="view active">
+        <div class="auth-container">
+            <h1 class="app-title">ToDo Manager</h1>
+            <p class="app-subtitle">Управление задачами по матрице Эйзенхауэра</p>
+            
+            <div class="auth-box">
+                <div class="auth-tabs">
+                    <button id="login-tab" class="auth-tab active">Вход</button>
+                    <button id="register-tab" class="auth-tab">Регистрация</button>
+                </div>
+
+                <form id="login-form" class="auth-form active">
+                    <div class="form-group">
+                        <label for="login-email">Email</label>
+                        <input type="email" id="login-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Пароль</label>
+                        <input type="password" id="login-password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Войти</button>
+                    <div id="login-error" class="error-message"></div>
+                </form>
+
+                <form id="register-form" class="auth-form">
+                    <div class="form-group">
+                        <label for="register-nickname">Никнейм</label>
+                        <input type="text" id="register-nickname" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-email">Email</label>
+                        <input type="email" id="register-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-password">Пароль</label>
+                        <input type="password" id="register-password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
+                    <div id="register-error" class="error-message"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="app-view" class="view">
+        <header class="app-header">
+            <div class="header-content">
+                <h1>Матрица Эйзенхауэра</h1>
+                <div class="header-actions">
+                    <span id="user-info" class="user-info"></span>
+                    <button id="logout-btn" class="btn btn-secondary">Выйти</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="toolbar">
+                <button id="add-task-btn" class="btn btn-primary">+ Добавить задачу</button>
+                <button id="refresh-btn" class="btn btn-secondary">🔄 Обновить</button>
+            </div>
+
+            <div class="eisenhower-matrix">
+                <div class="quadrant q1" data-quadrant="Q1">
+                    <div class="quadrant-header">
+                        <h2>Q1: Срочно и Важно</h2>
+                        <span class="task-count">0</span>
+                    </div>
+                    <div class="quadrant-content" id="quadrant-Q1"></div>
+                </div>
+
+                <div class="quadrant q2" data-quadrant="Q2">
+                    <div class="quadrant-header">
+                        <h2>Q2: Важно, Не срочно</h2>
+                        <span class="task-count">0</span>
+                    </div>
+                    <div class="quadrant-content" id="quadrant-Q2"></div>
+                </div>
+
+                <div class="quadrant q3" data-quadrant="Q3">
+                    <div class="quadrant-header">
+                        <h2>Q3: Срочно, Не важно</h2>
+                        <span class="task-count">0</span>
+                    </div>
+                    <div class="quadrant-content" id="quadrant-Q3"></div>
+                </div>
+
+                <div class="quadrant q4" data-quadrant="Q4">
+                    <div class="quadrant-header">
+                        <h2>Q4: Не срочно, Не важно</h2>
+                        <span class="task-count">0</span>
+                    </div>
+                    <div class="quadrant-content" id="quadrant-Q4"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="task-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Новая задача</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <form id="task-form">
+                <input type="hidden" id="task-id">
+                <div class="form-group">
+                    <label for="task-title">Название задачи</label>
+                    <input type="text" id="task-title" required minlength="3" maxlength="100">
+                </div>
+                <div class="form-group">
+                    <label for="task-description">Описание</label>
+                    <textarea id="task-description" maxlength="500" rows="4"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="task-deadline">Дедлайн</label>
+                    <input type="datetime-local" id="task-deadline">
+                </div>
+                <div class="form-group checkbox-group">
+                    <label>
+                        <input type="checkbox" id="task-important">
+                        <span>Важная задача</span>
+                    </label>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                    <button type="button" class="btn btn-secondary modal-cancel">Отмена</button>
+                </div>
+                <div id="task-form-error" class="error-message"></div>
+            </form>
+        </div>
+    </div>
+
+    <div id="loading" class="loading hidden">
+        <div class="spinner"></div>
+    </div>
+
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>

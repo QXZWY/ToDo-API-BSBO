@@ -233,13 +233,14 @@ async def update_task(
         setattr(task, field, value)
 
     if "is_important" in update_data or "deadline_at" in update_data:
-        task.is_urgent = calculate_urgency(task.deadline_at)
-        task.quadrant = determine_quadrant(task.is_important, task.is_urgent)
+        is_urgent = calculate_urgency(task.deadline_at)
+        task.quadrant = determine_quadrant(task.is_important, is_urgent)
 
     await db.commit()
     await db.refresh(task)
 
     task_dict = task.__dict__.copy()
+    task_dict['is_urgent'] = task.is_urgent
     task_dict['days_until_deadline'] = calculate_days_until_deadline(task.deadline_at)
     return TaskResponse(**task_dict)
 
@@ -268,6 +269,7 @@ async def complete_task(
     await db.refresh(task)
 
     task_dict = task.__dict__.copy()
+    task_dict['is_urgent'] = task.is_urgent
     task_dict['days_until_deadline'] = calculate_days_until_deadline(task.deadline_at)
     return TaskResponse(**task_dict)
 
