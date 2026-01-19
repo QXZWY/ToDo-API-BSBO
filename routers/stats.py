@@ -2,8 +2,10 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from models.task import Task
+from models.user import User
 from database import get_async_session
 from schemas import TaskDeadlineStats
+from dependencies import get_current_user
 from typing import List
 
 router = APIRouter(
@@ -12,8 +14,18 @@ router = APIRouter(
 )
 
 @router.get("/", response_model=dict)
-async def get_tasks_stats(db: AsyncSession = Depends(get_async_session)) -> dict:
-    result = await db.execute(select(Task))
+async def get_tasks_stats(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_async_session)
+) -> dict:
+    # Администраторы видят статистику по всем задачам
+    if current_user.role.value == "admin":
+        result = await db.execute(select(Task))
+    else:
+        # Обычные пользователи видят только свои задачи
+        result = await db.execute(
+            select(Task).where(Task.user_id == current_user.id)
+        )
     tasks = result.scalars().all()
     total_tasks = len(tasks)
     by_quadrant = {q: 0 for q in ["Q1", "Q2", "Q3", "Q4"]}
@@ -33,12 +45,23 @@ async def get_tasks_stats(db: AsyncSession = Depends(get_async_session)) -> dict
 
 @router.get("/deadlines", response_model=List[TaskDeadlineStats])
 async def get_pending_tasks_deadline_stats(
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_async_session)
 ) -> List[TaskDeadlineStats]:
-    # Получаем все задачи со статусом pending
-    result = await db.execute(
-        select(Task).where(Task.completed == False)
-    )
+    # Получаем задачи со статусом pending с учетом прав доступа
+    if current_user.role.value == "admin":
+        # Администраторы видят все незавершенные задачи
+        result = await db.execute(
+            select(Task).where(Task.completed == False)
+        )
+    else:
+        # Обычные пользователи видят только свои незавершенные задачи
+        result = await db.execute(
+            select(Task).where(
+                Task.completed == False,
+                Task.user_id == current_user.id
+            )
+        )
     pending_tasks = result.scalars().all()
     
     deadline_stats = []
